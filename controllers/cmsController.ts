@@ -49,7 +49,7 @@ export const getActiveBanners = async (req: Request, res: Response): Promise<voi
 export const getBannerById = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const banner = await getHeroBannerById(parseInt(id));
+        const banner = await getHeroBannerById(parseInt(id as string));
 
         if (!banner) {
             res.status(404).json({
@@ -134,7 +134,7 @@ export const updateBannerById = async (req: Request, res: Response): Promise<voi
             updateData.is_active = updateData.is_active === 'true' || updateData.is_active === true;
         }
 
-        const updatedBanner = await updateHeroBanner(parseInt(id), updateData);
+        const updatedBanner = await updateHeroBanner(parseInt(id as string), updateData);
 
         if (!updatedBanner) {
             res.status(404).json({
@@ -165,7 +165,7 @@ export const deleteBannerById = async (req: Request, res: Response): Promise<voi
         const { id } = req.params;
 
         // Get banner to retrieve image URL for Cloudinary deletion
-        const banner = await getHeroBannerById(parseInt(id));
+        const banner = await getHeroBannerById(parseInt(id as string));
 
         if (!banner) {
             res.status(404).json({
@@ -188,7 +188,7 @@ export const deleteBannerById = async (req: Request, res: Response): Promise<voi
         }
 
         // Delete from database
-        const deleted = await deleteHeroBanner(parseInt(id));
+        const deleted = await deleteHeroBanner(parseInt(id as string));
 
         if (!deleted) {
             res.status(404).json({
