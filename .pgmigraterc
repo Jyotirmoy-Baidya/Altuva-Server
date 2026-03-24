@@ -1,0 +1,11 @@
+{
+  "database-url": {
+    "env": "DATABASE_URL"
+  },
+  "migrations-dir": "db/migrations",
+  "dir": "db/migrations",
+  "schema": "public",
+  "create-schema": true,
+  "check-order": true,
+  "migration-file-language": "sql"
+}
