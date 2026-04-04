@@ -1,4 +1,5 @@
-import { pool, query } from './config';
+import { db, pool } from './config';
+import * as schema from './schema';
 
-// Export database connection and query function
-export { pool, query };
+// Export Drizzle instance, pool, and schema
+export { db, pool, schema };

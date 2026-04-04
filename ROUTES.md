@@ -5,6 +5,12 @@ This file tracks all routes, middlewares, and their functionality in the Altuva 
 ## Table of Contents
 - [Middlewares](#middlewares)
 - [Routes](#routes)
+  - [Health & Testing](#health--testing-routes)
+  - [Admin Auth](#admin-authentication-routes)
+  - [Admin CMS - Hero Banners](#admin-cms-routes-hero-banners)
+  - [Admin Products](#admin-product-routes)
+  - [Public CMS](#public-cms-routes)
+  - [Public Products](#public-product-routes)
 
 ---
 
@@ -65,6 +71,79 @@ Applied to specific routes that require authentication.
 |--------|----------|------------|-------------------|-------------|----------------|--------------|----------|
 | POST | `/admin/create-user` | `adminMiddleware` | `createUser` | Create new admin user (can set approved status) | `Authorization: Bearer <token>` | `{ name, email, phone_number?, password, role?, approved? }` | Success: `{ success: true, message, data: { user } }`<br>Error: `{ success: false, message }` |
 | GET | `/admin/get-me-admin-user` | `adminMiddleware` | `getMe` | Get current authenticated admin user info | `Authorization: Bearer <token>` | None | Success: `{ success: true, data: { id, name, email, phone_number, role, approved, created_at, updated_at } }`<br>Error: `{ success: false, message }` |
+
+---
+
+### Admin CMS Routes (Hero Banners)
+**File:** `routes/adminCmsRoutes.ts`
+**Controller:** `controllers/cmsController.ts`
+**Service:** `services/cmsService.ts`
+**Middleware:** `adminMiddleware` applied to all routes
+
+| Method | Endpoint | Controller Function | Description | Request Body |
+|--------|----------|-------------------|-------------|--------------|
+| GET | `/admin/cms/hero-banners` | `getAllBanners` | Get all hero banners | None |
+| GET | `/admin/cms/hero-banners/:id` | `getBannerById` | Get single banner | None |
+| POST | `/admin/cms/hero-banners` | `createBanner` | Create banner (multipart: `image` file) | FormData: `image, title, subtitle?, headtext?, text_color?, cta_button_color?, cta_button_text_color?, cta_button_text?, is_active?` |
+| PUT | `/admin/cms/hero-banners/:id` | `updateBannerById` | Update banner | FormData (same as create, all optional) |
+| DELETE | `/admin/cms/hero-banners/:id` | `deleteBannerById` | Delete banner + Cloudinary image | None |
+
+---
+
+### Admin Product Routes
+**File:** `routes/adminProductRoutes.ts`
+**Controller:** `controllers/productController.ts`
+**Service:** `services/productService.ts`
+**Middleware:** `adminMiddleware` applied to all routes
+
+| Method | Endpoint | Controller Function | Description | Request Body |
+|--------|----------|-------------------|-------------|--------------|
+| GET | `/admin/products` | `getAllProductsAdmin` | Get all products | None |
+| GET | `/admin/products/:id` | `getProductById` | Get single product by ID | None |
+| POST | `/admin/products` | `createProduct` | Create product (multipart: `primary_image` file) | FormData: `name, slug, brand, category, price, stock, description, primary_image` + all optional fields |
+| PUT | `/admin/products/:id` | `updateProduct` | Update product | FormData (any fields, all optional) |
+| DELETE | `/admin/products/:id` | `deleteProduct` | Delete product | None |
+
+**JSON fields** (send as JSON strings in FormData): `images, key_features, ingredients, nutrition_info, manufacturer, tags, flavors`
+
+---
+
+### Public CMS Routes
+**File:** `routes/publicCmsRoutes.ts`
+**Controller:** `controllers/cmsController.ts`
+**Middleware:** None (public)
+
+| Method | Endpoint | Controller Function | Description |
+|--------|----------|-------------------|-------------|
+| GET | `/api/cms/hero-banners` | `getActiveBanners` | Get all active hero banners |
+
+---
+
+### Public Product Routes
+**File:** `routes/publicProductRoutes.ts`
+**Controller:** `controllers/productController.ts`
+**Middleware:** None (public) — only returns `is_active = true` products
+
+| Method | Endpoint | Controller Function | Description |
+|--------|----------|-------------------|-------------|
+| GET | `/public/products` | `getPublicProducts` | Get active products with filters |
+| GET | `/public/products/:slug` | `getPublicProductBySlug` | Get product by slug |
+
+**Query Filters for** `GET /public/products`:
+
+| Param | Type | Example | Description |
+|-------|------|---------|-------------|
+| `category` | string | `?category=Jam` | Filter by category |
+| `sub_category` | string | `?sub_category=Fruit Jam` | Filter by sub-category |
+| `brand` | string | `?brand=Altuva` | Filter by brand |
+| `is_featured` | boolean | `?is_featured=true` | Featured products only |
+| `search` | string | `?search=mango` | Search by product name |
+| `min_price` | number | `?min_price=100` | Min price filter |
+| `max_price` | number | `?max_price=500` | Max price filter |
+| `tags` | string (comma-sep) | `?tags=organic,fresh` | Filter by tags |
+| `flavors` | string (comma-sep) | `?flavors=mango,berry` | Filter by flavors |
+| `limit` | number | `?limit=20` | Results per page (default: 20) |
+| `offset` | number | `?offset=0` | Pagination offset (default: 0) |
 
 ---
 
@@ -146,4 +225,4 @@ NODE_ENV=development
 
 ---
 
-**Last Updated:** 2026-03-25
+**Last Updated:** 2026-04-04

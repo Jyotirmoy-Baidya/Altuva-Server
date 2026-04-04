@@ -1,11 +1,14 @@
-import { pool } from '../db';
+import { db, schema } from '../db';
+import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+
+const { adminUsers } = schema;
 
 export interface AdminUser {
     id: number;
     name: string;
     email: string;
-    phone_number?: string;
+    phone_number?: string | null;
     password: string;
     role: string;
     approved: boolean;
@@ -28,34 +31,57 @@ export const createAdminUser = async (userData: CreateAdminUserDTO): Promise<Omi
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const query = `
-        INSERT INTO admin_users (name, email, phone_number, password, role, approved)
-        VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, name, email, phone_number, role, approved, created_at, updated_at
-    `;
+    const [result] = await db
+        .insert(adminUsers)
+        .values({
+            name,
+            email,
+            phone_number,
+            password: hashedPassword,
+            role,
+            approved,
+        })
+        .returning({
+            id: adminUsers.id,
+            name: adminUsers.name,
+            email: adminUsers.email,
+            phone_number: adminUsers.phone_number,
+            role: adminUsers.role,
+            approved: adminUsers.approved,
+            created_at: adminUsers.created_at,
+            updated_at: adminUsers.updated_at,
+        });
 
-    const values = [name, email, phone_number, hashedPassword, role, approved];
-    const result = await pool.query(query, values);
-
-    return result.rows[0];
+    return result;
 };
 
 export const findAdminByEmail = async (email: string): Promise<AdminUser | null> => {
-    const query = 'SELECT * FROM admin_users WHERE email = $1';
-    const result = await pool.query(query, [email]);
+    const result = await db
+        .select()
+        .from(adminUsers)
+        .where(eq(adminUsers.email, email))
+        .limit(1);
 
-    return result.rows[0] || null;
+    return result[0] || null;
 };
 
 export const findAdminById = async (id: number): Promise<Omit<AdminUser, 'password'> | null> => {
-    const query = `
-        SELECT id, name, email, phone_number, role, approved, created_at, updated_at
-        FROM admin_users
-        WHERE id = $1
-    `;
-    const result = await pool.query(query, [id]);
+    const result = await db
+        .select({
+            id: adminUsers.id,
+            name: adminUsers.name,
+            email: adminUsers.email,
+            phone_number: adminUsers.phone_number,
+            role: adminUsers.role,
+            approved: adminUsers.approved,
+            created_at: adminUsers.created_at,
+            updated_at: adminUsers.updated_at,
+        })
+        .from(adminUsers)
+        .where(eq(adminUsers.id, id))
+        .limit(1);
 
-    return result.rows[0] || null;
+    return result[0] || null;
 };
 
 export const verifyPassword = async (plainPassword: string, hashedPassword: string): Promise<boolean> => {

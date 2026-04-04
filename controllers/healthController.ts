@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
-import * as db from '../db';
+import { db, pool } from '../db';
+import { sql } from 'drizzle-orm';
 
 export const getRoot = (req: Request, res: Response): void => {
     res.send("Backend server is running 🚀");
@@ -11,7 +12,7 @@ export const getHello = (req: Request, res: Response): void => {
 
 export const testDatabase = async (req: Request, res: Response): Promise<void> => {
     try {
-        const result = await db.query("SELECT NOW() as current_time");
+        const result = await db.execute(sql`SELECT NOW() as current_time`);
         res.json({
             message: "Database connected successfully!",
             timestamp: result.rows[0].current_time

@@ -1,5 +1,7 @@
-import { Pool, QueryResult } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import * as schema from './schema';
 
 dotenv.config();
 
@@ -32,9 +34,7 @@ pool.query('SELECT NOW()')
         console.error('Make sure PostgreSQL is running and database "Altuva" exists');
     });
 
-// Query helper function
-const query = (text: string, params?: any[]): Promise<QueryResult> => {
-    return pool.query(text, params);
-};
+// Create Drizzle instance
+export const db = drizzle(pool, { schema });
 
-export { pool, query };
+export { pool };

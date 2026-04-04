@@ -7,6 +7,8 @@ import { healthRoutes } from './routes/healthRoutes';
 import { adminRoutes } from './routes/adminRoutes';
 import { adminCmsRoutes } from './routes/adminCmsRoutes';
 import { publicCmsRoutes } from './routes/publicCmsRoutes';
+import { adminProductRoutes } from './routes/adminProductRoutes';
+import { publicProductRoutes } from './routes/publicProductRoutes';
 
 dotenv.config();
 
@@ -35,7 +37,9 @@ app.use(logger);
 app.use('/', healthRoutes);
 app.use('/admin', adminRoutes);
 app.use('/admin/cms', adminCmsRoutes);
+app.use('/admin/products', adminProductRoutes);
 app.use('/api/cms', publicCmsRoutes);
+app.use('/public/products', publicProductRoutes);
 
 // Error Handler Middleware (must be last)
 app.use(errorHandler);
