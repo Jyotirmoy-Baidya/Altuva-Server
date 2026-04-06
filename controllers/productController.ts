@@ -23,7 +23,7 @@ export const getAllProductsAdmin = async (req: Request, res: Response): Promise<
 
 export const getProductById = async (req: Request, res: Response): Promise<void> => {
     try {
-        const product = await getProductByIdService(parseInt(req.params.id));
+        const product = await getProductByIdService(parseInt(req.params.id as string));
         if (!product) {
             res.status(404).json({ success: false, message: 'Product not found' });
             return;
@@ -34,26 +34,48 @@ export const getProductById = async (req: Request, res: Response): Promise<void>
     }
 };
 
+const uploadProductFiles = async (files: Record<string, Express.Multer.File[]>) => {
+    const result: { primary_image?: string; secondary_image?: string; images?: { url: string; altText: string }[] } = {};
+
+    if (files.primary_image?.[0]) {
+        const uploaded = await uploadToCloudinary(files.primary_image[0].buffer, 'products');
+        result.primary_image = uploaded.secure_url;
+    }
+
+    if (files.secondary_image?.[0]) {
+        const uploaded = await uploadToCloudinary(files.secondary_image[0].buffer, 'products');
+        result.secondary_image = uploaded.secure_url;
+    }
+
+    if (files.product_images?.length) {
+        const uploaded = await Promise.all(
+            files.product_images.map(f => uploadToCloudinary(f.buffer, 'products'))
+        );
+        result.images = uploaded.map(u => ({ url: u.secure_url, altText: '' }));
+    }
+
+    return result;
+};
+
 export const createProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-        const file = req.file;
-        let primary_image = req.body.primary_image;
+        const files = (req.files as Record<string, Express.Multer.File[]>) || {};
+        const uploaded = await uploadProductFiles(files);
 
-        if (file) {
-            const uploaded = await uploadToCloudinary(file.buffer, 'products');
-            primary_image = uploaded.secure_url;
-        }
-
+        const primary_image = uploaded.primary_image || req.body.primary_image;
         if (!primary_image) {
             res.status(400).json({ success: false, message: 'Primary image is required' });
             return;
         }
 
+        const existingImages = req.body.images ? JSON.parse(req.body.images) : [];
+
         const product = await createProductService({
             ...req.body,
             primary_image,
+            secondary_image: uploaded.secondary_image || req.body.secondary_image,
             stock: parseInt(req.body.stock ?? '0'),
-            images: req.body.images ? JSON.parse(req.body.images) : [],
+            images: uploaded.images?.length ? uploaded.images : existingImages,
             key_features: req.body.key_features ? JSON.parse(req.body.key_features) : [],
             ingredients: req.body.ingredients ? JSON.parse(req.body.ingredients) : [],
             nutrition_info: req.body.nutrition_info ? JSON.parse(req.body.nutrition_info) : {},
@@ -70,17 +92,22 @@ export const createProduct = async (req: Request, res: Response): Promise<void> 
 
 export const updateProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = parseInt(req.params.id);
-        const file = req.file;
-        let updateData = { ...req.body };
+        const id = parseInt(req.params.id as string);
+        const files = (req.files as Record<string, Express.Multer.File[]>) || {};
+        const uploaded = await uploadProductFiles(files);
 
-        if (file) {
-            const uploaded = await uploadToCloudinary(file.buffer, 'products');
-            updateData.primary_image = uploaded.secure_url;
+        let updateData: any = { ...req.body };
+
+        if (uploaded.primary_image) updateData.primary_image = uploaded.primary_image;
+        if (uploaded.secondary_image) updateData.secondary_image = uploaded.secondary_image;
+
+        // Merge new gallery images with existing ones
+        if (uploaded.images?.length) {
+            const existing = updateData.images ? JSON.parse(updateData.images) : [];
+            updateData.images = [...existing, ...uploaded.images];
         }
 
-        // Parse JSON fields if sent as strings
-        const jsonFields = ['images', 'key_features', 'ingredients', 'nutrition_info', 'manufacturer', 'tags', 'flavors'];
+        const jsonFields = ['key_features', 'ingredients', 'nutrition_info', 'manufacturer', 'tags', 'flavors', 'images'];
         for (const field of jsonFields) {
             if (updateData[field] && typeof updateData[field] === 'string') {
                 updateData[field] = JSON.parse(updateData[field]);
@@ -101,7 +128,7 @@ export const updateProduct = async (req: Request, res: Response): Promise<void> 
 
 export const deleteProduct = async (req: Request, res: Response): Promise<void> => {
     try {
-        const product = await deleteProductService(parseInt(req.params.id));
+        const product = await deleteProductService(parseInt(req.params.id as string));
         if (!product) {
             res.status(404).json({ success: false, message: 'Product not found' });
             return;
@@ -154,7 +181,7 @@ export const getPublicProducts = async (req: Request, res: Response): Promise<vo
 
 export const getPublicProductBySlug = async (req: Request, res: Response): Promise<void> => {
     try {
-        const product = await getProductBySlugService(req.params.slug);
+        const product = await getProductBySlugService(req.params.slug as string);
         if (!product) {
             res.status(404).json({ success: false, message: 'Product not found' });
             return;

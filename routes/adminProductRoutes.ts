@@ -15,8 +15,14 @@ router.use(adminMiddleware);
 
 router.get('/', getAllProductsAdmin);
 router.get('/:id', getProductById);
-router.post('/', upload.single('primary_image'), createProduct);
-router.put('/:id', upload.single('primary_image'), updateProduct);
+const productUpload = upload.fields([
+    { name: 'primary_image', maxCount: 1 },
+    { name: 'secondary_image', maxCount: 1 },
+    { name: 'product_images', maxCount: 10 },
+]);
+
+router.post('/', productUpload, createProduct);
+router.put('/:id', productUpload, updateProduct);
 router.delete('/:id', deleteProduct);
 
 export { router as adminProductRoutes };
