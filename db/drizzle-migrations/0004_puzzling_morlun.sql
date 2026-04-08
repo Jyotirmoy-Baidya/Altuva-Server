@@ -1,0 +1,1 @@
+ALTER TABLE "hero_banners" ADD COLUMN "cta_button_url" varchar(500) DEFAULT '/products';
