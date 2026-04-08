@@ -14,7 +14,7 @@ import { uploadToCloudinary, deleteFromCloudinary } from '../utils/cloudinary';
 
 export const getAllProductsAdmin = async (req: Request, res: Response): Promise<void> => {
     try {
-        const products = await getAllProductsService({});
+        const { products } = await getAllProductsService({});
         res.status(200).json({ success: true, data: products });
     } catch (error) {
         res.status(500).json({ success: false, message: error instanceof Error ? error.message : 'Server error' });
@@ -144,17 +144,9 @@ export const deleteProduct = async (req: Request, res: Response): Promise<void> 
 export const getPublicProducts = async (req: Request, res: Response): Promise<void> => {
     try {
         const {
-            category,
-            sub_category,
-            brand,
-            is_featured,
-            search,
-            min_price,
-            max_price,
-            tags,
-            flavors,
-            limit,
-            offset,
+            category, sub_category, brand, is_featured,
+            search, min_price, max_price, tags, flavors,
+            sort, limit, offset,
         } = req.query;
 
         const filters: ProductFilters = {
@@ -168,12 +160,13 @@ export const getPublicProducts = async (req: Request, res: Response): Promise<vo
             max_price: max_price ? parseFloat(max_price as string) : undefined,
             tags: tags ? (tags as string).split(',') : undefined,
             flavors: flavors ? (flavors as string).split(',') : undefined,
-            limit: limit ? parseInt(limit as string) : 20,
+            sort: (sort as ProductFilters['sort']) || 'newest',
+            limit: limit ? parseInt(limit as string) : 24,
             offset: offset ? parseInt(offset as string) : 0,
         };
 
-        const products = await getAllProductsService(filters);
-        res.status(200).json({ success: true, data: products });
+        const { products, total } = await getAllProductsService(filters);
+        res.status(200).json({ success: true, data: products, total, limit: filters.limit, offset: filters.offset });
     } catch (error) {
         res.status(500).json({ success: false, message: error instanceof Error ? error.message : 'Server error' });
     }

@@ -1,14 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken, JWTPayload } from '../utils/jwt';
 
-// Extend Express Request to include user
-declare global {
-    namespace Express {
-        interface Request {
-            user?: JWTPayload;
-        }
-    }
-}
 
 export const adminMiddleware = (req: Request, res: Response, next: NextFunction): void => {
     try {

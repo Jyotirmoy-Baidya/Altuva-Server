@@ -1,5 +1,7 @@
 import { db, schema } from '../db';
-import { eq, desc, ilike, and, SQL, gte, lte, inArray } from 'drizzle-orm';
+import { eq, desc, asc, ilike, and, or, SQL, gte, lte, sql, count } from 'drizzle-orm';
+
+// Run once: CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 const { products } = schema;
 
@@ -52,41 +54,69 @@ export interface ProductFilters {
     tags?: string[];
     flavors?: string[];
     search?: string;
+    sort?: 'newest' | 'price_asc' | 'price_desc' | 'popular';
     limit?: number;
     offset?: number;
 }
 
-export const getAllProductsService = async (filters: ProductFilters = {}) => {
+const buildConditions = (filters: ProductFilters): SQL[] => {
     const conditions: SQL[] = [];
 
-    if (filters.is_active !== undefined) {
-        conditions.push(eq(products.is_active, filters.is_active));
+    if (filters.is_active !== undefined) conditions.push(eq(products.is_active, filters.is_active));
+    if (filters.category)    conditions.push(ilike(products.category, filters.category));
+    if (filters.sub_category) conditions.push(ilike(products.sub_category, filters.sub_category));
+    if (filters.brand)       conditions.push(ilike(products.brand, filters.brand));
+    if (filters.is_featured !== undefined) conditions.push(eq(products.is_featured, filters.is_featured));
+    if (filters.min_price !== undefined) conditions.push(gte(products.price, String(filters.min_price)));
+    if (filters.max_price !== undefined) conditions.push(lte(products.price, String(filters.max_price)));
+
+    if (filters.tags?.length) {
+        conditions.push(sql`${products.tags}::jsonb ?| array[${sql.raw(filters.tags.map(t => `'${t.replace(/'/g, "''")}'`).join(','))}]`);
     }
-    if (filters.category) {
-        conditions.push(ilike(products.category, filters.category));
-    }
-    if (filters.sub_category) {
-        conditions.push(ilike(products.sub_category, filters.sub_category));
-    }
-    if (filters.brand) {
-        conditions.push(ilike(products.brand, filters.brand));
-    }
-    if (filters.is_featured !== undefined) {
-        conditions.push(eq(products.is_featured, filters.is_featured));
-    }
+
     if (filters.search) {
-        conditions.push(ilike(products.name, `%${filters.search}%`));
+        const s = filters.search.trim();
+        // pg_trgm similarity OR plain ilike fallback for short queries
+        conditions.push(or(
+            ilike(products.name, `%${s}%`),
+            ilike(products.brand, `%${s}%`),
+            ilike(products.description, `%${s}%`),
+            sql`similarity(${products.name}, ${s}) > 0.15`,
+        ) as SQL);
     }
 
-    const query = db
-        .select()
-        .from(products)
-        .where(conditions.length > 0 ? and(...conditions) : undefined)
-        .orderBy(desc(products.created_at))
-        .limit(filters.limit ?? 20)
-        .offset(filters.offset ?? 0);
+    return conditions;
+};
 
-    return await query;
+const buildOrderBy = (filters: ProductFilters, hasSearch: boolean) => {
+    if (hasSearch) {
+        const s = filters.search!.trim();
+        return [
+            desc(sql`similarity(${products.name}, ${s})`),
+            desc(products.created_at),
+        ];
+    }
+    switch (filters.sort) {
+        case 'price_asc':  return [asc(products.price)];
+        case 'price_desc': return [desc(products.price)];
+        case 'popular':    return [desc(products.ratings_count), desc(products.ratings_average)];
+        default:           return [desc(products.created_at)];
+    }
+};
+
+export const getAllProductsService = async (filters: ProductFilters = {}) => {
+    const conditions = buildConditions(filters);
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const orderBy = buildOrderBy(filters, !!filters.search);
+    const limit = filters.limit ?? 20;
+    const offset = filters.offset ?? 0;
+
+    const [rows, [{ total }]] = await Promise.all([
+        db.select().from(products).where(where).orderBy(...orderBy).limit(limit).offset(offset),
+        db.select({ total: count() }).from(products).where(where),
+    ]);
+
+    return { products: rows, total: Number(total) };
 };
 
 export const getProductByIdService = async (id: number) => {

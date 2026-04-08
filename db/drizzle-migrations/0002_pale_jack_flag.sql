@@ -1,0 +1,1 @@
+ALTER TABLE "spotlights" ADD COLUMN "bg_color" varchar(50) DEFAULT '#3B0E0E' NOT NULL;
