@@ -6,7 +6,11 @@ import crypto from 'crypto';
 
 dotenv.config();
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL, ssl: {
+        rejectUnauthorized: false, // 🔥 REQUIRED for Neon
+    },
+});
 
 async function run() {
     const client = await pool.connect();
