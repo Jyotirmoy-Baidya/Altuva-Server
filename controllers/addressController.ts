@@ -22,7 +22,7 @@ export const addAddressHandler = async (req: Request, res: Response): Promise<vo
 
 export const updateAddressHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const address = await updateAddress(parseInt(req.params.id), req.customer!.id, req.body);
+        const address = await updateAddress(parseInt(String(req.params.id)), req.customer!.id, req.body);
         if (!address) { res.status(404).json({ success: false, message: 'Address not found' }); return; }
         ok(res, address);
     } catch (e) { err(res, e); }
@@ -30,7 +30,7 @@ export const updateAddressHandler = async (req: Request, res: Response): Promise
 
 export const deleteAddressHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const address = await deleteAddress(parseInt(req.params.id), req.customer!.id);
+        const address = await deleteAddress(parseInt(String(req.params.id)), req.customer!.id);
         if (!address) { res.status(404).json({ success: false, message: 'Address not found' }); return; }
         ok(res, { message: 'Address deleted' });
     } catch (e) { err(res, e); }
@@ -38,7 +38,7 @@ export const deleteAddressHandler = async (req: Request, res: Response): Promise
 
 export const setDefaultAddressHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const address = await setDefaultAddress(parseInt(req.params.id), req.customer!.id);
+        const address = await setDefaultAddress(parseInt(String(req.params.id)), req.customer!.id);
         if (!address) { res.status(404).json({ success: false, message: 'Address not found' }); return; }
         ok(res, address);
     } catch (e) { err(res, e); }

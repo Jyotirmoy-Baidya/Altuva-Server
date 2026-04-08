@@ -21,7 +21,7 @@ export const createTaxHandler = async (req: Request, res: Response): Promise<voi
 
 export const updateTaxHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const tax = await updateTax(parseInt(req.params.id), req.body);
+        const tax = await updateTax(parseInt(String(req.params.id)), req.body);
         if (!tax) { res.status(404).json({ success: false, message: 'Tax not found' }); return; }
         ok(res, tax);
     } catch (e) { err(res, e); }
@@ -29,7 +29,7 @@ export const updateTaxHandler = async (req: Request, res: Response): Promise<voi
 
 export const deleteTaxHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const tax = await deleteTax(parseInt(req.params.id));
+        const tax = await deleteTax(parseInt(String(req.params.id)));
         if (!tax) { res.status(404).json({ success: false, message: 'Tax not found' }); return; }
         ok(res, { message: 'Tax deleted' });
     } catch (e) { err(res, e); }

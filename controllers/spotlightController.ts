@@ -64,7 +64,7 @@ export const createSpotlight = async (req: Request, res: Response): Promise<void
 
 export const updateSpotlight = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = parseInt(req.params.id);
+        const id = parseInt(String(req.params.id));
         const { quote, person_name, sort_order, is_active, bg_color } = req.body;
         const updates: Record<string, any> = { updated_at: new Date() };
 
@@ -88,7 +88,7 @@ export const updateSpotlight = async (req: Request, res: Response): Promise<void
 
 export const deleteSpotlight = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = parseInt(req.params.id);
+        const id = parseInt(String(req.params.id));
         const [row] = await db.delete(spotlights).where(eq(spotlights.id, id)).returning();
         if (!row) { res.status(404).json({ success: false, message: 'Not found' }); return; }
         res.json({ success: true, message: 'Deleted' });

@@ -78,7 +78,7 @@ export const createPopularSection = async (req: Request, res: Response): Promise
 
 export const updatePopularSection = async (req: Request, res: Response): Promise<void> => {
     try {
-        const id = parseInt(req.params.id);
+        const id = parseInt(String(req.params.id));
         const { category, title, subtitle, cta_text, cta_url, product_1_slug, product_2_slug, sort_order, is_active } = req.body;
         const updates: Record<string, any> = { updated_at: new Date() };
         if (category !== undefined)        updates.category = category;
@@ -101,7 +101,7 @@ export const updatePopularSection = async (req: Request, res: Response): Promise
 
 export const deletePopularSection = async (req: Request, res: Response): Promise<void> => {
     try {
-        const [row] = await db.delete(popularSections).where(eq(popularSections.id, parseInt(req.params.id))).returning();
+        const [row] = await db.delete(popularSections).where(eq(popularSections.id, parseInt(String(req.params.id)))).returning();
         if (!row) { res.status(404).json({ success: false, message: 'Not found' }); return; }
         res.json({ success: true, message: 'Deleted' });
     } catch (e) {

@@ -21,7 +21,7 @@ export const createDeliveryChargeHandler = async (req: Request, res: Response): 
 
 export const updateDeliveryChargeHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const slab = await updateDeliveryCharge(parseInt(req.params.id), req.body);
+        const slab = await updateDeliveryCharge(parseInt(String(req.params.id)), req.body);
         if (!slab) { res.status(404).json({ success: false, message: 'Slab not found' }); return; }
         ok(res, slab);
     } catch (e) { err(res, e); }
@@ -29,7 +29,7 @@ export const updateDeliveryChargeHandler = async (req: Request, res: Response): 
 
 export const deleteDeliveryChargeHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const slab = await deleteDeliveryCharge(parseInt(req.params.id));
+        const slab = await deleteDeliveryCharge(parseInt(String(req.params.id)));
         if (!slab) { res.status(404).json({ success: false, message: 'Slab not found' }); return; }
         ok(res, { message: 'Delivery charge deleted' });
     } catch (e) { err(res, e); }

@@ -14,7 +14,7 @@ export const getCartHandler = async (req: Request, res: Response): Promise<void>
 
 export const addToCartHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const productId = parseInt(req.params.productId);
+        const productId = parseInt(String(req.params.productId));
         const quantity = parseInt(req.body.quantity ?? '1');
         ok(res, await addToCart(req.customer!.id, productId, quantity));
     } catch (e) { err(res, e, 400); }
@@ -22,7 +22,7 @@ export const addToCartHandler = async (req: Request, res: Response): Promise<voi
 
 export const updateCartItemHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const productId = parseInt(req.params.productId);
+        const productId = parseInt(String(req.params.productId));
         const quantity = parseInt(req.body.quantity);
         if (isNaN(quantity)) { res.status(400).json({ success: false, message: 'quantity is required' }); return; }
         ok(res, await updateCartItem(req.customer!.id, productId, quantity));
@@ -31,7 +31,7 @@ export const updateCartItemHandler = async (req: Request, res: Response): Promis
 
 export const removeFromCartHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        ok(res, await removeFromCart(req.customer!.id, parseInt(req.params.productId)));
+        ok(res, await removeFromCart(req.customer!.id, parseInt(String(req.params.productId))));
     } catch (e) { err(res, e); }
 };
 
