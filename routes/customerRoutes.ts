@@ -9,6 +9,7 @@ import {
     getAddresses, addAddressHandler, updateAddressHandler,
     deleteAddressHandler, setDefaultAddressHandler,
 } from '../controllers/addressController';
+import { initiateOrder, verifyOrder, listOrders, getOrder } from '../controllers/orderController';
 
 const router = Router();
 
@@ -33,5 +34,11 @@ router.post('/addresses', customerMiddleware, addAddressHandler);
 router.put('/addresses/:id', customerMiddleware, updateAddressHandler);
 router.delete('/addresses/:id', customerMiddleware, deleteAddressHandler);
 router.patch('/addresses/:id/set-default', customerMiddleware, setDefaultAddressHandler);
+
+// ─── Orders ───────────────────────────────────────────────────────────────────
+router.post('/orders/initiate', customerMiddleware, initiateOrder);
+router.post('/orders/verify', customerMiddleware, verifyOrder);
+router.get('/orders', customerMiddleware, listOrders);
+router.get('/orders/:id', customerMiddleware, getOrder);
 
 export { router as customerRoutes };

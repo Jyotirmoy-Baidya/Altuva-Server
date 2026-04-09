@@ -18,6 +18,7 @@ import { adminSpotlightRoutes } from './routes/adminSpotlightRoutes';
 import { publicSpotlightRoutes } from './routes/publicSpotlightRoutes';
 import { adminPopularSectionRoutes } from './routes/adminPopularSectionRoutes';
 import { publicPopularSectionRoutes } from './routes/publicPopularSectionRoutes';
+import { adminOrderRoutes } from './routes/adminOrderRoutes';
 
 dotenv.config();
 
@@ -25,11 +26,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // CORS Configuration
-const allowedOrigins = process.env.CORS_ORIGIN?.split(',') || [
-    'http://localhost:5174',
-    'http://localhost:5175',
-    'http://localhost:5173',
-];
+const allowedOrigins = process.env.CORS_ORIGIN?.split(',');
 
 const corsOptions = {
     origin: allowedOrigins,
@@ -58,6 +55,7 @@ app.use('/admin/spotlights', adminSpotlightRoutes);
 app.use('/public/spotlights', publicSpotlightRoutes);
 app.use('/admin/popular-sections', adminPopularSectionRoutes);
 app.use('/public/popular-sections', publicPopularSectionRoutes);
+app.use('/admin/orders', adminOrderRoutes);
 
 // Error Handler Middleware (must be last)
 app.use(errorHandler);
